@@ -126,8 +126,7 @@ def analyze_video(video_path):
             "status": "No Face Detected"
         }
 
-    final_score = aggregate_scores(scores)
-
+    final_score = 0.7 * max(scores) + 0.3 * (sum(scores) / len(scores))
     result = {
         "type": "video",
         "video_score": final_score,
