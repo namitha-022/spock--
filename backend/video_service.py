@@ -66,3 +66,6 @@ def predict(tensor):
         prob = torch.sigmoid(output).item()
     return prob
 
+
+def aggregate_scores(scores):
+    return float(sum(scores) / len(scores))
