@@ -19,6 +19,7 @@ class SimpleCNN(nn.Module):
             nn.AdaptiveAvgPool2d(1)
         )
 
+        self.target_layer = self.features[6]  # Last Conv2d
         self.classifier = nn.Linear(64, 1)
 
     def forward(self, x):
@@ -29,5 +30,10 @@ class SimpleCNN(nn.Module):
 
 def load_model():
     model = SimpleCNN()
-    model.load_state_dict(torch.load("weights/model.pth", map_location="cpu"))
+    try:
+        state_dict = torch.load("weights/model.pth", map_location="cpu")
+        model.load_state_dict(state_dict)
+    except Exception as e:
+        print("Warning: Could not load weights:", e)
+        print("Using randomly initialized model.")
     return model

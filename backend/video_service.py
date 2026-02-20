@@ -42,7 +42,8 @@ def extract_frames(video_path):
 mtcnn = MTCNN(keep_all=False, device=DEVICE)
 
 def detect_face(image):
-    boxes, _ = mtcnn.detect(image)
+    rgb_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    boxes, _ = mtcnn.detect(rgb_img)
     if boxes is None:
         return None
 
@@ -71,9 +72,13 @@ def aggregate_scores(scores):
 
 def generate_gradcam(tensor):
     try:
-        target_layers = [model.features[-2]]  # last conv layer
+        target_layers = [model.target_layer]  # last conv layer
 
-        cam = GradCAM(model=model, target_layers=target_layers)
+        if DEVICE.type == "mps":
+           model_cpu = model.cpu()
+           cam = GradCAM(model=model_cpu, target_layers=target_layers)
+        else:
+          cam = GradCAM(model=model, target_layers=target_layers)
         targets = [ClassifierOutputTarget(1)]
 
         grayscale_cam = cam(input_tensor=tensor, targets=targets)[0]
