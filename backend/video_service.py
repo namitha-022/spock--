@@ -4,14 +4,14 @@ import torch
 import numpy as np
 import subprocess
 import time
-
+from backend.celery_app import celery
 from facenet_pytorch import MTCNN
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
-from video_model import load_model
-from utils import DEVICE
+from backend.video_model import load_model
+from backend.utils import DEVICE
 
 
 model ,THRESHOLD= load_model()
@@ -149,3 +149,9 @@ def analyze_video(video_path):
     print(f"[VIDEO] Score: {final_score:.3f} | Time: {time.time() - start_time:.2f}s")
 
     return result
+
+
+
+@celery.task(name="video_service.task_video_analysis")
+def task_video_analysis(video_path):
+    return analyze_video(video_path)

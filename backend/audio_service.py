@@ -4,9 +4,9 @@ import librosa
 import numpy as np
 import torch
 import time
-
-from audio_model import CRNN
-from audio_model import load_audio_model
+from backend.celery_app import celery
+from backend.audio_model import CRNN
+from backend.audio_model import load_audio_model
 
 DEVICE = torch.device("cpu")
 torch.set_num_threads(2)
@@ -44,7 +44,9 @@ def extract_audio(video_path, output_path):
         output_path,
         "-y"
     ]
-    subprocess.run(cmd)
+    subprocess.run(cmd,stdout=subprocess.DEVNULL,
+    stderr=subprocess.DEVNULL,
+    check=True)
     return output_path
 
 
@@ -99,18 +101,15 @@ def analyze_audio(video_path):
       mel = np.pad(mel, ((0,0),(0,pad_size)), mode='constant')
     else:
       mel = mel[:, :MAX_LEN]
-    
-    print("Mel shape:", mel.shape)
 
     tensor = preprocess(mel)
-    print("Tensor shape:", tensor.shape)
 
     with torch.no_grad():
         prob = model(tensor).item()
 
-    if prob > THRESHOLD + 0.1:
+    if prob > THRESHOLD + 0.02:
       status = "Likely Fake"
-    elif prob < THRESHOLD - 0.1:
+    elif prob < THRESHOLD - 0.02:
       status = "Likely Real"
     else:
       status = "Uncertain"
@@ -118,6 +117,12 @@ def analyze_audio(video_path):
     print(f"[AUDIO] Score: {prob:.3f} | Time: {time.time() - start:.2f}s")
 
     return {
-        "fake_probability": fake_prob,
-        "label": "Fake" if fake_prob > 0.5 else "Real"
+        "type": "audio",
+        "audio_probability": prob,
+        "status":status
     }
+
+
+@celery.task(name="audio_service.task_audio_analysis")
+def task_audio_analysis(video_path):
+    return analyze_audio(video_path)

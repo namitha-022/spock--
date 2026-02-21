@@ -3,16 +3,14 @@
 from celery import Celery
 
 celery = Celery(
-    "deepverify",
+    "verify",
     broker="redis://localhost:6379/0",
-    backend="redis://localhost:6379/1"
+    backend="redis://localhost:6379/0",
+    include=["backend.video_service", "backend.audio_service"],
 )
 
 celery.conf.update(
     task_serializer="json",
-    accept_content=["json"],
     result_serializer="json",
-    timezone="UTC",
-    enable_utc=True,
-    task_track_started=True
+    accept_content=["json"]
 )

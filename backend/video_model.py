@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+from pathlib import Path
 
 class DeepfakeModel(nn.Module):
     def __init__(self):
@@ -14,7 +15,7 @@ class DeepfakeModel(nn.Module):
 
 def load_model():
     model = DeepfakeModel()  
-    weights_path = "weights/model.pth"
+    weights_path = Path(__file__).resolve().parent / "weights" / "model.pth"
 
     try:
         ckpt = torch.load(weights_path, map_location="cpu", weights_only=False)
@@ -42,5 +43,4 @@ def load_model():
 
     model.load_state_dict(state_dict, strict=False)
     return model, threshold
-
 
