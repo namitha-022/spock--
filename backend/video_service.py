@@ -149,9 +149,3 @@ def analyze_video(video_path):
     print(f"[VIDEO] Score: {final_score:.3f} | Time: {time.time() - start_time:.2f}s")
 
     return result
-
-from celery_app import celery
-
-@celery.task
-def task_video_analysis(video_path):
-    return analyze_video(video_path)

@@ -93,8 +93,3 @@ def analyze_audio(video_path):
         "fake_probability": fake_prob,
         "label": "Fake" if fake_prob > 0.5 else "Real"
     }
-from celery_app import celery
-
-@celery.task
-def task_audio_analysis(video_path):
-    return analyze_audio(video_path)
