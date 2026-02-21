@@ -37,6 +37,6 @@ else:
     print("Face detected:", face is not None)
 
 print("\n===== FULL PIPELINE TEST =====")
-video_path = str(MEDIA_DIR / "real_sample.mp4")
+video_path = str(MEDIA_DIR / "sample4.mp4")
 result = analyze_video(video_path)
 print("Final Result:", result)

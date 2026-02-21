@@ -156,10 +156,20 @@ def analyze_metadata(video_path):
     recycled = check_recycled(phash_value)
 
     # scoring logic
-    score = 0.3  # base suspicion
+    score = 0.0
 
     if recycled:
-        score += 0.4
+      score = 0.85
+    else:
+      metadata_json = extract_basic_metadata(str(resolved_video_path))
+
+      if "Lavf" in metadata_json:
+        score += 0.1
+
+      if "encoder" not in metadata_json:
+        score += 0.1
+
+      score = min(score, 0.4)
 
     metadata_json = extract_basic_metadata(str(resolved_video_path))
 

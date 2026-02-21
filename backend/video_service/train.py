@@ -4,13 +4,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms, models
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 
 
 
 DEVICE = torch.device("cpu")
 BATCH_SIZE = 16
-EPOCHS = 5
+EPOCHS = 8
 LR = 1e-3
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +24,19 @@ transform = transforms.Compose([
 ])
 
 dataset = datasets.ImageFolder(DATA_DIR, transform=transform)
-loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+if len(dataset) < 2:
+    raise ValueError("Need at least 2 samples to create train/validation split.")
+
+train_size = int(0.8 * len(dataset))
+val_size = len(dataset) - train_size
+if train_size == 0:
+    train_size, val_size = 1, len(dataset) - 1
+if val_size == 0:
+    val_size, train_size = 1, len(dataset) - 1
+
+train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 
 
@@ -49,7 +61,7 @@ print("Starting training...")
 for epoch in range(EPOCHS):
     total_loss = 0
 
-    for images, labels in loader:
+    for images, labels in train_loader:
         images = images.to(DEVICE)
         labels = labels.float().unsqueeze(1).to(DEVICE)
 
@@ -63,7 +75,7 @@ for epoch in range(EPOCHS):
 
         total_loss += loss.item()
 
-    print(f"Epoch [{epoch+1}/{EPOCHS}] Loss: {total_loss/len(loader):.4f}")
+    print(f"Epoch [{epoch+1}/{EPOCHS}] Loss: {total_loss/len(train_loader):.4f}")
 
 print("Training complete.")
 
@@ -73,7 +85,7 @@ real_scores = []
 fake_scores = []
 
 with torch.no_grad():
-    for images, labels in loader:
+    for images, labels in val_loader:
         images = images.to(DEVICE)
         outputs = model(images)
         probs = torch.sigmoid(outputs).cpu().numpy()
@@ -109,7 +121,7 @@ for t in np.linspace(0, 1, 200):
         best_threshold = t
 
 print("Best threshold:", best_threshold)
-print("Training accuracy:", best_accuracy)
+print("Validation accuracy:", best_accuracy)
 
 # Save weights
 os.makedirs(str(BASE_DIR / "weights"), exist_ok=True)
@@ -117,5 +129,7 @@ torch.save({
     "model_state": model.state_dict(),
     "threshold": best_threshold
 }, WEIGHTS_PATH)
-
+print("Real mean:", np.mean(real_scores))
+print("Fake mean:", np.mean(fake_scores))
+print("Best threshold:", best_threshold)
 print("Model saved.")

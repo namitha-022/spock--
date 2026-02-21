@@ -7,6 +7,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from backend.audio_service import analyze_audio
 
-audio_path = str(Path(__file__).resolve().parents[1] / "media" / "real_sample.mp4")
+audio_path = str(Path(__file__).resolve().parents[1] / "media" / "sample4.mp4")
 result = analyze_audio(audio_path)
 print(result)
