@@ -15,39 +15,6 @@ fileInput.onchange = () => {
   fileNameEl.innerText = file ? file.name : "No file chosen";
 };
 
-function connectWs(result) {
-  const ws = new WebSocket(`ws://127.0.0.1:8000/ws/${result.analysis_id}`);
-
-  ws.onopen = () => {
-    ws.send(JSON.stringify({
-      video_task_id: result.video_task_id,
-      audio_task_id: result.audio_task_id,
-      metadata_task_id: result.metadata_task_id
-    }));
-  };
-
-  ws.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.stage === "final") {
-        const finalScore = data.result?.final_score;
-        statusEl.innerText = finalScore != null
-          ? `Final score: ${finalScore}`
-          : "Analysis complete";
-        return;
-      }
-      statusEl.innerText = `Stage complete: ${data.stage}`;
-    } catch (err) {
-      statusEl.innerText = "Received invalid update from backend";
-      console.error(err);
-    }
-  };
-
-  ws.onerror = () => {
-    statusEl.innerText = "WebSocket connection error";
-  };
-}
-
 analyzeBtn.onclick = async () => {
   const file = fileInput.files?.[0];
   if (!file) {
@@ -71,8 +38,12 @@ analyzeBtn.onclick = async () => {
     }
 
     const data = await res.json();
-    statusEl.innerText = "Upload accepted. Waiting for results...";
-    connectWs(data);
+    const final = data.final;
+    if (final && typeof final.final_score !== "undefined") {
+      statusEl.innerText = `Final: ${final.verdict} (${final.final_score})`;
+    } else {
+      statusEl.innerText = "Analysis completed";
+    }
   } catch (err) {
     statusEl.innerText = "Backend not reachable";
     console.error(err);

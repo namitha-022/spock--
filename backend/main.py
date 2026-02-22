@@ -52,7 +52,24 @@ async def analyse(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Failed to save upload: {exc}") from exc
 
     video_path = str(temp_path.resolve())
-    return _enqueue_analysis(video_path)
+    queued = _enqueue_analysis(video_path)
+
+    try:
+        video_result = AsyncResult(queued["video_task_id"], app=celery).get(timeout=180)
+        audio_result = AsyncResult(queued["audio_task_id"], app=celery).get(timeout=180)
+        metadata_result = AsyncResult(queued["metadata_task_id"], app=celery).get(timeout=180)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Analysis task failed: {exc}") from exc
+
+    final = compute_final_score(video_result, audio_result, metadata_result)
+
+    return {
+        "analysis_id": queued["analysis_id"],
+        "video_result": video_result,
+        "audio_result": audio_result,
+        "metadata_result": metadata_result,
+        "final": final,
+    }
 
 @app.websocket("/ws/{analysis_id}")
 async def websocket_endpoint(websocket: WebSocket, analysis_id: str):
