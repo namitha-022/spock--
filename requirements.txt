@@ -9,3 +9,4 @@ redis
 librosa
 Pillow
 ImageHash
+python-multipart

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DeepVerify Analyzer</title>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 40px auto;
+      font-family: Arial, sans-serif;
+      padding: 0 16px;
+    }
+
+    button {
+      padding: 10px 14px;
+      margin-top: 12px;
+      min-width: 120px;
+    }
+
+    #status {
+      margin-top: 16px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h2>DeepVerify</h2>
+  <p>Select a file here (outside popup) to avoid popup file-dialog crashes.</p>
+
+  <input type="file" id="videoInput" accept="video/*,audio/*">
+  <br>
+  <button id="analyzeBtn">Analyze</button>
+
+  <p id="status">Idle</p>
+
+  <script src="analyzer.js"></script>
+</body>
+</html>

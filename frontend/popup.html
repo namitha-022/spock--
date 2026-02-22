@@ -4,33 +4,58 @@
   <title>DeepVerify</title>
   <style>
     body {
-      width: 300px;
+      width: 320px;
       font-family: Arial, sans-serif;
       padding: 10px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
     }
 
     button {
       width: 100%;
       padding: 8px;
-      margin-top: 10px;
+      margin-top: 8px;
+    }
+
+    #chooseBtn {
+      width: auto;
+      margin-top: 0;
+    }
+
+    #fileName {
+      font-size: 12px;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
     }
 
     #status {
       margin-top: 10px;
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
+  <h3>DeepVerify</h3>
 
-<h3>DeepVerify</h3>
+  <input type="file" id="videoInput" accept="video/*,audio/*" style="display:none">
 
-<input type="file" id="videoInput">
+  <div class="row">
+    <button id="chooseBtn" type="button">Choose File</button>
+    <span id="fileName">No file chosen</span>
+  </div>
 
-<button id="analyzeBtn">Analyze</button>
+  <button id="analyzeBtn" type="button">Analyze</button>
 
-<p id="status">Idle</p>
+  <p id="status">Idle</p>
 
-<script src="popup.js"></script>
-
+  <script src="popup.js"></script>
 </body>
 </html>

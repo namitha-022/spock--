@@ -1,19 +1,8 @@
 const API = "http://127.0.0.1:8000";
 
 const statusEl = document.getElementById("status");
-const chooseBtn = document.getElementById("chooseBtn");
-const analyzeBtn = document.getElementById("analyzeBtn");
 const fileInput = document.getElementById("videoInput");
-const fileNameEl = document.getElementById("fileName");
-
-chooseBtn.onclick = () => {
-  fileInput.click();
-};
-
-fileInput.onchange = () => {
-  const file = fileInput.files?.[0];
-  fileNameEl.innerText = file ? file.name : "No file chosen";
-};
+const analyzeBtn = document.getElementById("analyzeBtn");
 
 function connectWs(result) {
   const ws = new WebSocket(`ws://127.0.0.1:8000/ws/${result.analysis_id}`);
@@ -38,8 +27,8 @@ function connectWs(result) {
       }
       statusEl.innerText = `Stage complete: ${data.stage}`;
     } catch (err) {
+      console.error("Invalid WS payload", err);
       statusEl.innerText = "Received invalid update from backend";
-      console.error(err);
     }
   };
 
@@ -61,13 +50,13 @@ analyzeBtn.onclick = async () => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch(API + "/analyse", {
+    const res = await fetch(API + "/analyze-upload", {
       method: "POST",
       body: formData
     });
 
     if (!res.ok) {
-      throw new Error(`Upload failed: ${res.status}`);
+      throw new Error("Request failed with status " + res.status);
     }
 
     const data = await res.json();

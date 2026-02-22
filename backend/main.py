@@ -1,8 +1,10 @@
 # backend/main.py
 import asyncio
-from fastapi import FastAPI, WebSocket
-from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 from uuid import uuid4
+
+from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from celery.result import AsyncResult
 
 from backend.celery_app import celery
@@ -19,9 +21,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@app.post("/analyze")
-async def analyze(video_path: str):
 
+
+def _enqueue_analysis(video_path: str):
     analysis_id = str(uuid4())
 
     video_task = task_video_analysis.delay(video_path)
@@ -34,6 +36,23 @@ async def analyze(video_path: str):
         "audio_task_id": audio_task.id,
         "metadata_task_id": metadata_task.id
     }
+
+
+
+@app.post("/analyse")
+async def analyse(file: UploadFile = File(...)):
+    suffix = Path(file.filename or "upload.mp4").suffix or ".mp4"
+    temp_path = Path("temp") / f"upload_{uuid4().hex}{suffix}"
+    temp_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        content = await file.read()
+        temp_path.write_bytes(content)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Failed to save upload: {exc}") from exc
+
+    video_path = str(temp_path.resolve())
+    return _enqueue_analysis(video_path)
 
 @app.websocket("/ws/{analysis_id}")
 async def websocket_endpoint(websocket: WebSocket, analysis_id: str):
